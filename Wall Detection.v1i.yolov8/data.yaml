@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 3
+names: ['door', 'window', 'zone']
+
+roboflow:
+  workspace: walldetection
+  project: wall-detection-auqa7
+  version: 1
+  license: Public Domain
+  url: https://universe.roboflow.com/walldetection/wall-detection-auqa7/dataset/1
