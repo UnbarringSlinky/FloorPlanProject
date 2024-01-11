@@ -63,7 +63,7 @@ def load_data_from_json(filename):
     with open(filename, 'r') as file:
         return json.load(file)
 
-data = load_data_from_json('camera_obstacle_data.json')
+data = load_data_from_json('C:\\Users\\ryanl\\OneDrive\\Desktop\\FloorPlanProject\\camera_obstacle_data.json')
 
 
 # Plot the data with FOV

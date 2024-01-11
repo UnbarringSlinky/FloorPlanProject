@@ -1,4 +1,4 @@
-from shapely.geometry import Point, Polygon, LineString
+from shapely.geometry import MultiPoint, Point, Polygon, LineString
 import shapely.ops as ops
 import numpy as np
 import json
@@ -6,13 +6,10 @@ import pygame
 import math
 
 # Constants for the window size and offset
-WINDOW_WIDTH = 1025
-WINDOW_HEIGHT = 950
-OFFSET_X = 100
-OFFSET_Y = 100
-zoom_factor = 0.75  # Less than 1 to zoom out
-screen_center_x = WINDOW_WIDTH / 2
-screen_center_y = WINDOW_HEIGHT / 2
+WINDOW_WIDTH = 1225
+WINDOW_HEIGHT = 1150
+OFFSET_X = 300
+OFFSET_Y = 300
 
 # Functions
 def calculate_coverage(camera_pos, direction, CAMERA_FOV, CAMERA_RANGE, NUM_RAYS, obstacles):
@@ -96,7 +93,7 @@ def find_closest_camera(cameras, point):
 running = True
 selected_camera = None
 fov_angle = 108  # Field of view in degrees
-max_distance = 300  # Maximum view distance
+max_distance = 200  # Maximum view distance
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
