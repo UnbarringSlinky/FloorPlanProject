@@ -36,7 +36,7 @@ orientations = np.radians(orientations)
 POPULATION_SIZE = 100
 P_CROSSOVER = 0.7  # probability for crossover
 P_MUTATION = 0.4   # probability for mutating an individual
-MAX_GENERATIONS = 25
+MAX_GENERATIONS = 100
 NUM_ELITES = 2
 
 # Function for calculating a polygon that represents a single cameras view
