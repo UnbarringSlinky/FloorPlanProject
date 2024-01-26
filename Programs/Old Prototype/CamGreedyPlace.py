@@ -7,11 +7,58 @@ from roboflow import Roboflow
 
 #import roboflow api and model
 rf = Roboflow(api_key="ToE2nfuMFjtdpjUPUL8f")
-project = rf.workspace().project("wall-floorplan")
-model = project.version(1).model
+project = rf.workspace().project("floorplan-tracer")
+model = project.version(4).model
+
+
 
 # infer on a local image
-data = model.predict("C:\\Users\\ryanl\\OneDrive\\Desktop\\FloorPlanProject\\fp1.jpg", confidence=47, overlap=1).json()
+data = model.predict("C:\\Users\\ryanl\\OneDrive\\Desktop\\FloorPlanProject\\Data\\fp1.jpg", confidence=.001).json()
+
+
+
+# Function to create a Polygon or LineString from points
+
+def create_shape_from_points(points, max_y):
+    # Flip the y-coordinate for each point
+    flipped_points = [(point['x'], max_y - point['y']) for point in points]
+
+    # Create a LineString for diagonal or complex shapes
+    return LineString(flipped_points)
+
+def create_shape(item, max_y):
+    if 'points' in item and isinstance(item['points'], list):
+        points = item['points']
+        if len(points) > 2:
+            # Use create_polygon for more than 2 points
+            center_x, center_y, width, height = item['x'], item['y'], item['width'], item['height']
+            return create_polygon(center_x, center_y, width, height, max_y)
+        else:
+            # Use create_linestring for 2 or fewer points
+            return create_linestring(points, max_y)
+    return None
+
+def create_linestring(points, max_y):
+    print("Created LineString")
+    return LineString([(point['x'], max_y - point['y']) for point in points])
+
+def create_polygon(center_x, center_y, width, height, max_y):
+    half_width = width / 2
+    half_height = height / 2
+
+    # Calculate the top left corner based on the center point
+    top_left_x = center_x - half_width
+    top_left_y = center_y - half_height
+
+    # Flip the y-coordinate for each corner
+    y_flipped_top_left = max_y - top_left_y
+    y_flipped_bottom_left = max_y - (top_left_y + height)
+
+    # Create the polygon using the flipped y-coordinates
+    return Polygon([(top_left_x, y_flipped_top_left), 
+                    (top_left_x + width, y_flipped_top_left), 
+                    (top_left_x + width, y_flipped_bottom_left), 
+                    (top_left_x, y_flipped_bottom_left)])
 
 #Define Functions for calculating camera placement, Camera coverage, camera adding, wall adding and greedy functions
 def trim_ray_at_obstacle(ray, obstacles):
@@ -80,11 +127,18 @@ def create_wall(center_x, center_y, width, height, max_y):
                     (top_left_x + width, y_flipped_top_left - height), 
                     (top_left_x, y_flipped_top_left - height)])
 # Import JSON data here and convert it into obstacles (list of Polygons)
-walls = []
+max_y = 800
+# Check if 'predictions' key exists and is a list
+obstacles = []
+
+
+# Iterate over each prediction and create shapes
 for item in data['predictions']:
-    wall = create_wall(item['x'], item['y'], item['width'], item['height'],800) #800 is max_y
-    walls.append(wall)
-obstacles = walls
+     # Check if the item's class is not 'background'
+    if item.get('class') != 'background':
+        if 'points' in item and isinstance(item['points'], list):
+            shape = create_shape_from_points(item['points'], max_y)
+            obstacles.append(shape)
 
 fov_angle = np.radians(90)  # 90 degrees FOV
 max_distance = 200
@@ -95,12 +149,16 @@ total_coverage = []
 
 fig, ax = plt.subplots()
 ax.set_aspect('equal', adjustable='box')
-ax.set_xlim(-400, 800)
-ax.set_ylim(-400, 800)
+ax.set_xlim(-200, 1000)
+ax.set_ylim(0, 1200)
 
 for obstacle in obstacles:
-    x, y = obstacle.exterior.xy
-    ax.fill(x, y, alpha=0.5, fc='red', ec='none')
+    if isinstance(obstacle, LineString):
+        x, y = obstacle.xy
+        ax.plot(x, y, color='red', linewidth=2)  # Plot line
+    elif isinstance(obstacle, Polygon):
+        x, y = obstacle.exterior.xy
+        ax.fill(x, y, alpha=0.5, fc='red', ec='none')  # Fill polygon
 
 cid = fig.canvas.mpl_connect('button_press_event', on_click)
 
