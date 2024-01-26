@@ -5,8 +5,8 @@ import numpy as np
 import json
 
 # Constants for camera FOV
-CAMERA_FOV = 108  # degrees
-CAMERA_RANGE = 200  # units
+CAMERA_FOV = 114  # degrees
+CAMERA_RANGE = 500  # units
 NUM_RAYS = 100
 
 def calculate_coverage(camera_pos, direction, CAMERA_FOV, CAMERA_RANGE, NUM_RAYS, obstacles):
@@ -24,27 +24,50 @@ def calculate_coverage(camera_pos, direction, CAMERA_FOV, CAMERA_RANGE, NUM_RAYS
 
 def trim_ray_at_obstacle(ray, obstacles):
     intersections = [ray.intersection(obstacle) for obstacle in obstacles if ray.intersects(obstacle)]
-    if intersections:
-        closest_intersection = min(intersections, key=lambda x: Point(ray.coords[0]).distance(x))
+    if not intersections:
+        return ray
+
+    # Find the closest intersection point to the start of the ray
+    closest_intersection = min(intersections, key=lambda inter: Point(ray.coords[0]).distance(inter))
+
+    # Handle different types of geometries
+    if closest_intersection.geom_type == 'Point':
         return LineString([ray.coords[0], closest_intersection.coords[0]])
-    return ray
+    elif closest_intersection.geom_type == 'LineString':
+        return LineString([ray.coords[0], closest_intersection.coords[0]])
+    elif closest_intersection.geom_type == 'MultiLineString':
+        # For MultiLineString, find the closest point among all line strings
+        closest_point = None
+        min_distance = float('inf')
+        for line in closest_intersection.geoms:  # Iterate over each LineString in the MultiLineString
+            point = line.coords[0]  # Taking the first point of each line
+            distance = Point(ray.coords[0]).distance(Point(point))
+            if distance < min_distance:
+                min_distance = distance
+                closest_point = point
+        return LineString([ray.coords[0], closest_point])
+    else:
+        # If it's another type, return the original ray
+        return ray  
 
 def plot_data(data, camera_fov, camera_range, num_rays):
     fig, ax = plt.subplots()
 
     # Plotting obstacles
     for obstacle in data['obstacles']:
-        poly = Polygon(obstacle['coordinates'])
+        coords = [(point['x'], point['y']) for point in obstacle['coordinates']]
+        poly = Polygon(coords)
         patch = patches.Polygon(list(poly.exterior.coords), color='gray', alpha=0.5)
         ax.add_patch(patch)
 
     # Plotting cameras and their FOV
     for camera in data['cameras']:
-        camera_pos = (camera['x'], camera['y'])
-        direction = camera['direction']
+        camera_pos = (float(camera['x']), float(camera['y']))
+        direction = float(camera['direction'])
+        print("Camera position and direction:", camera_pos, direction)  # Debug print
 
         # Calculate FOV polygon for each camera
-        obstacles = [Polygon(obstacle['coordinates']) for obstacle in data['obstacles']]
+        obstacles = [Polygon([(float(point['x']), float(point['y'])) for point in obstacle['coordinates']]) for obstacle in data['obstacles']]
         fov_polygon = calculate_coverage(camera_pos, direction, camera_fov, camera_range, num_rays, obstacles)
 
         if isinstance(fov_polygon, Polygon):
@@ -53,8 +76,8 @@ def plot_data(data, camera_fov, camera_range, num_rays):
 
         ax.add_patch(patches.Circle(camera_pos, radius=2, color='blue'))
 
-    ax.set_xlim(-100, 925)  # Adjust as per your coordinate range
-    ax.set_ylim(-100, 850)
+    ax.set_xlim(-300, 1025)  # Adjust as per your coordinate range
+    ax.set_ylim(-300, 1750)
     ax.set_aspect('equal', 'box')
     plt.show()
 

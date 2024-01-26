@@ -1,4 +1,4 @@
-from shapely.geometry import MultiPoint, Point, Polygon, LineString
+from shapely.geometry import MultiPoint, MultiLineString, Point, Polygon, LineString
 import shapely.ops as ops
 import numpy as np
 import json
@@ -6,10 +6,55 @@ import pygame
 import math
 
 # Constants for the window size and offset
-WINDOW_WIDTH = 1225
-WINDOW_HEIGHT = 1150
-OFFSET_X = 300
-OFFSET_Y = 300
+WINDOW_WIDTH = 1525
+WINDOW_HEIGHT = 1550
+OFFSET_X = 500
+OFFSET_Y = 0
+NUM_RAYS = 360
+
+# Load data from the file
+def load_data(filename):
+    with open(filename, 'r') as file:
+        return json.load(file)
+    
+# Save data to the file
+def save_data(filename, cameras, obstacles):
+    # Format camera data into a list to be saved for future use
+    camera_data = [{'x': camera['x'], 'y': camera['y'], 'direction': camera['direction']} for camera in cameras]
+
+    # Format Obstacle data into a serializable format
+    obstacle_data = []
+    for obstacle in obstacles:
+        if isinstance(obstacle, Polygon):
+            coords = [{'x': c[0], 'y': c[1]} for c in list(obstacle.exterior.coords)]
+        elif isinstance(obstacle, LineString):
+            coords = [{'x': c[0], 'y': c[1]} for c in list(obstacle.coords)]
+        obstacle_data.append({'coordinates': coords})
+
+    # Combine into a single data structure
+    data_to_save = {'cameras': camera_data, 'obstacles': obstacle_data}
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the display
+screen = pygame.display.set_mode((1200, 1500))
+
+
+# Load camera and obstacle data from JSON
+data = load_data('camera_obstacle_data.json')
+cameras = data['cameras']
+
+# Convert JSON obstacle data to Polygon or LineString objects
+obstacles = []
+for obstacle in data['obstacles']:
+    coords = [(float(point['x']), float(point['y'])) for point in obstacle['coordinates']]
+    if len(coords) > 2:
+        obstacles.append(Polygon(coords))  # Create a Polygon if more than two points
+    else:
+        obstacles.append(LineString(coords))  # Create a LineString if two or fewer points
+
+original_obstacles = obstacles
 
 # Functions
 def calculate_coverage(camera_pos, direction, CAMERA_FOV, CAMERA_RANGE, NUM_RAYS, obstacles):
@@ -27,32 +72,39 @@ def calculate_coverage(camera_pos, direction, CAMERA_FOV, CAMERA_RANGE, NUM_RAYS
 
 def trim_ray_at_obstacle(ray, obstacles):
     intersections = [ray.intersection(obstacle) for obstacle in obstacles if ray.intersects(obstacle)]
-    if intersections:
-        closest_intersection = min(intersections, key=lambda x: Point(ray.coords[0]).distance(x))
-        return LineString([ray.coords[0], closest_intersection.coords[0]])
-    return ray
+    if not intersections:
+        return ray  # Return the original ray if no intersections
 
-# Load data from the file
-def load_data(filename):
-    with open(filename, 'r') as file:
-        return json.load(file)
+    closest_point = None
+    min_distance = float('inf')
+    for intersection in intersections:
+        if intersection.is_empty:
+            continue  # Skip empty intersections
 
-# Save data to the file
-def save_data(filename, data):
-    with open(filename, 'w') as file:
-        json.dump(data, file, indent=4)
+        # Extract points from different intersection types
+        if isinstance(intersection, Point):
+            points = [intersection]
+        elif isinstance(intersection, LineString):
+            points = [Point(p) for p in intersection.coords]
+        elif isinstance(intersection, MultiPoint):
+            points = list(intersection.geoms)
+        elif isinstance(intersection, MultiLineString):
+            points = [Point(p) for line in intersection.geoms for p in line.coords]
+        else:
+            continue  # Skip unsupported geometry types
 
-# Initialize Pygame
-pygame.init()
+        # Find the closest point to the ray's origin
+        for point in points:
+            distance = ray.distance(point)
+            if distance < min_distance:
+                min_distance = distance
+                closest_point = point
 
-# Set up the display
-screen = pygame.display.set_mode((800, 600))
+    if closest_point is not None:
+        return LineString([ray.coords[0], closest_point.coords[0]])
+    return ray  # Return the original ray if no closest point found
 
-# Load camera and obstacle data
-data = load_data('camera_obstacle_data.json')
-cameras = data['cameras']
-obstacles = [Polygon(obstacle['coordinates']) for obstacle in data['obstacles']]
-NUM_RAYS = 100
+
 # Draw obstacles cameras and Fov
 def draw(cameras, obstacles, fov_angle, max_distance):
     screen.fill((255, 255, 255))  # Clear the screen with white
@@ -90,10 +142,12 @@ def find_closest_camera(cameras, point):
             closest_camera = camera
     return closest_camera
 
+
+
 running = True
 selected_camera = None
 fov_angle = 108  # Field of view in degrees
-max_distance = 200  # Maximum view distance
+max_distance = 550  # Maximum view distance
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -123,20 +177,15 @@ while running:
 
 
 
-# Format camera data into a list to be saved for future use
+
+# Format camera data for saving
 camera_data = [{'x': camera['x'], 'y': camera['y'], 'direction': camera['direction']} for camera in cameras]
 
-# Format Obstacle data into a serializable format
-obstacle_data = []
-for obstacle in obstacles:
-    coords = list(obstacle.exterior.coords)
-    obstacle_data.append({'coordinates': coords})
+# Combine camera and original obstacle data
+data_to_save = {'cameras': camera_data, 'obstacles': original_obstacles}
 
-# Combine into a single data structure
-data_to_save = {'cameras': camera_data, 'obstacles': obstacle_data}
+# Save the combined data to a JSON file
+save_data('camera_obstacle_data.json', data_to_save)
 
-# Save to a json file
-with open('camera_obstacle_data.json', 'w') as file:
-    json.dump(data_to_save, file, indent=4)
 
 pygame.quit()

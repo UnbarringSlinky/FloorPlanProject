@@ -1,11 +1,33 @@
-Evaluating individual on process with PID: 29336
-Evaluating individual on process with PID: 32400
-Evaluating individual on process with PID: 10708
-Evaluating individual on process with PID: 26388
-Evaluating individual on process with PID: 29468
-Evaluating individual on process with PID: 31932
-Evaluating individual on process with PID: 35824
-Evaluating individual on process with PID: 34852
-Evaluating individual on process with PID: 33968
-Evaluating individual on process with PID: 34024
-Evaluating individual on process with PID: 35740
+Evaluated without least impactful camera: (-39152419.08816629,)
+Evaluated without least impactful camera: (-49382508.17573876,)
+Evaluated without least impactful camera: (-39358390.65781234,)
+Evaluated without least impactful camera: (-39411658.00179283,)
+Evaluated without least impactful camera: (-39122717.61544594,)
+Evaluated without least impactful camera: (-39111386.095020495,)
+Generation: 0
+  Min Fitness: -69735130.60923944
+  Max Fitness: -39319782.68427913
+  Avg Fitness: -52101599.45846328
+  Num Elites: 1
+Evaluated without least impactful camera: (-29402275.700034898,)
+Evaluated without least impactful camera: (-39540217.03828257,)
+Evaluated without least impactful camera: (-29498464.392775472,)
+Evaluated without least impactful camera: (-29202627.39458696,)
+Evaluated without least impactful camera: (-39191216.0054239,)
+Evaluated without least impactful camera: (-29287056.760995235,)
+Generation: 1
+  Min Fitness: -62828506.333058916
+  Max Fitness: -30564900.684674848
+  Avg Fitness: -46945992.857083045
+  Num Elites: 1
+Evaluated without least impactful camera: (-19820451.146618556,)
+Evaluated without least impactful camera: (-29792988.65013404,)
+Evaluated without least impactful camera: (-29776047.65553125,)
+Evaluated without least impactful camera: (-20797452.067667887,)
+Evaluated without least impactful camera: (-30533202.499754794,)
+Evaluated without least impactful camera: (-20431197.939097174,)
+Generation: 2
+  Min Fitness: -61391861.59819474
+  Max Fitness: -29650851.426699713
+  Avg Fitness: -43015523.83696744
+  Num Elites: 1
