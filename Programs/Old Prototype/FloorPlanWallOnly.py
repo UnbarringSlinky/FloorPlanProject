@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from shapely.geometry import Polygon, box
 from roboflow import Roboflow
-rf = Roboflow(api_key="ToE2nfuMFjtdpjUPUL8f")
+rf = Roboflow(api_key="x")
 project = rf.workspace().project("floor_plan_wall_only-ebquk")
 model = project.version(4).model
 
