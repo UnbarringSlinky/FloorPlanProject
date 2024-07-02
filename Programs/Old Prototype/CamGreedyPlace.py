@@ -6,7 +6,7 @@ from matplotlib.patches import Rectangle
 from roboflow import Roboflow
 
 #import roboflow api and model
-rf = Roboflow(api_key="ToE2nfuMFjtdpjUPUL8f")
+rf = Roboflow(api_key="x")
 project = rf.workspace().project("floorplan-tracer")
 model = project.version(4).model
 
