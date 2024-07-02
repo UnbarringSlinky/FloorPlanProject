@@ -449,7 +449,7 @@ def main():
     global obstacles
     #JSON data from Object detection model.
     #import roboflow api and model
-    rf = Roboflow(api_key="ToE2nfuMFjtdpjUPUL8f")
+    rf = Roboflow(api_key="X")
     project = rf.workspace().project("wall-floorplan")
     model = project.version(1).model
 
